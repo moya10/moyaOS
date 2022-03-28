@@ -1,95 +1,97 @@
 #include <stdint.h>
-#define DISPLAY_SIZE 2000 // 2000 = 80 x 25 Characters - VGA Text-mode Display size
+#include <stddef.h>
+#include "include/system.h"
+#include "math.cpp"
+#include "print.cpp"
+#include "memory.cpp"
+#include "screen.cpp"
+#include "IDT.cpp"
+#include "interrupts.cpp"
+#include "PageFrameAllocator.cpp"
 
-void ShiftDisplayUpOneLine()
-{
-	unsigned short* DisplayMemoryPtr = (unsigned short*)0xB8000;
-	unsigned char BackgroundColour = 0x06; // Yellow background - distinct colour from the assembly code
-	unsigned char ForegroundColour = 0x00; // Black text
-	unsigned char Colour = ((BackgroundColour << 4) & 0xF0) | (ForegroundColour & 0x0F); // Calculate combined colour value
-	unsigned int i;
-	for(i = 0; i < DISPLAY_SIZE - 80; i++) 
-	{
-		DisplayMemoryPtr[i] = DisplayMemoryPtr[i + 80];
-	}
-	for(i = DISPLAY_SIZE - 1; i > DISPLAY_SIZE - 80; i--)
-	{
-		DisplayMemoryPtr[i] = (((unsigned short)Colour) << 8) | 0x00; //0x0600;
-	}
-}
-void Print(char text[])
-{
-	static unsigned int CurrentLocation = 0;
-	
-	unsigned short* DisplayMemoryPtr = (unsigned short*)0xB8000;
-	unsigned char BackgroundColour = 0x06; // Yellow background - distinct colour from the assembly code
-	unsigned char ForegroundColour = 0x00; // Black text
-	unsigned char Colour = ((BackgroundColour << 4) & 0xF0) | (ForegroundColour & 0x0F); // Calculate combined colour value
-	
-	int i;
-	for(i = 0; text[i] != 0; i++)
-	{
-		if(CurrentLocation == DISPLAY_SIZE) 
-		{
-			ShiftDisplayUpOneLine();
-			CurrentLocation -= 80;
-		}
-		
-		if(text[i] == '\n') 
-		{
-			CurrentLocation += (80 - (CurrentLocation % 80));
-		}
-        else if(text[i] == '\t')
-        {
-            int spaces;
-            for(spaces = 0; spaces < 4;spaces++){
-                if(CurrentLocation == DISPLAY_SIZE){
-                    ShiftDisplayUpOneLine();
-                    CurrentLocation -=80;
-                }
-                DisplayMemoryPtr[CurrentLocation++] = (((unsigned short)Colour) << 8) | ' ';
-            }
-        }else if(text[i] == '\b'){
-            if(CurrentLocation > 0){
-                DisplayMemoryPtr[--CurrentLocation] = (((unsigned short)Colour) << 8) | ' ';
-            }
-        }
-		else
-		{
-			DisplayMemoryPtr[CurrentLocation++] = (((unsigned short)Colour) << 8) | text[i];
-		}
-	}
-}
-void PrintLine(char text[])
-{
-    Print("\n");
-	Print(text);
-}
+
+IDTR idtr;
 
 extern "C" void main(){
+ 
+	idtr.Limit = 0x0FFF;
+    idtr.Offset = (uint64_t)system.RequestPage(); 
 
+    IDTDescEntry* interrupt = (IDTDescEntry*)(idtr.Offset + 0xE * sizeof(IDTDescEntry));
+    interrupt->SetOffset((uint64_t)(void*)PageFault_Handler);
+    interrupt->type_attr = IDT_TA_InterruptGate;
+    interrupt->selector = 0x08;
+
+	IDTDescEntry* kb_interrupt = (IDTDescEntry*)(idtr.Offset + 0x21 * sizeof(IDTDescEntry));
+    kb_interrupt->SetOffset((uint64_t)(void*)KeyboardInt_Handler);
+    kb_interrupt->type_attr = IDT_TA_InterruptGate;
+    kb_interrupt->selector = 0x08;
+
+	IDTDescEntry* m_interrupt = (IDTDescEntry*)(idtr.Offset + 0x2C * sizeof(IDTDescEntry));
+    m_interrupt->SetOffset((uint64_t)(void*)MouseInt_Handler);
+    m_interrupt->type_attr = IDT_TA_InterruptGate;
+    m_interrupt->selector = 0x08;
+
+	asm ("lidt %0" : : "m" (idtr));
+
+	uint8_t a1, a2; 
+
+    a1 = system.inportb(PIC1_DATA);
+    system.io_wait();
+    a2 = system.inportb(PIC2_DATA);
+    system.io_wait();
+
+    system.outportb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
+    system.io_wait();
+    system.outportb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
+    system.io_wait();
+
+    system.outportb(PIC1_DATA, 0x20);
+    system.io_wait();
+    system.outportb(PIC2_DATA, 0x28);
+    system.io_wait();
+
+    system.outportb(PIC1_DATA, 4);
+    system.io_wait();
+    system.outportb(PIC2_DATA, 2);
+    system.io_wait();
+
+    system.outportb(PIC1_DATA, ICW4_8086);
+    system.io_wait();
+    system.outportb(PIC2_DATA, ICW4_8086);
+    system.io_wait();
+
+    system.outportb(PIC1_DATA, a1);
+    system.io_wait();
+    system.outportb(PIC2_DATA, a2);
+
+	system.init_video();
+	system.settextcolor(0x0000FFaa,0x00000011);
+
+	InitPS2Mouse();
+
+    system.outportb(PIC1_DATA, 0b11111000);
+    system.outportb(PIC2_DATA, 0b11101111);
+
+    //asm ("sti");
+
+	/* Interrupts */
+
+	// int i = 0;
+	// i = 10 / i;
+	// system.putch(i);
+
+	// asm("int $0x0e");
     
-	unsigned char BackgroundColour = 0x06; // Yellow background - distinct colour from the assembly code
-	unsigned char ForegroundColour = 0x00; // Black text
-	unsigned char Colour = ((BackgroundColour << 4) & 0xF0) | (ForegroundColour & 0x0F); // Calculate combined colour value
-	unsigned short* DisplayMemoryPtr = (unsigned short*)0xB8000 ;
+	/* alphabet */
 
-	int i = 0; // Start at first character of the display
-	while (i < DISPLAY_SIZE) // Loop through all characters
-	{
-		//	Set character cell to 0x6000 i.e. (Colour << 8) | NULL Character
-		DisplayMemoryPtr[i++] = (((unsigned short)Colour) << 8) | 0x00; 
-	}
-
-	int u = 1;
 	char c = 'A';
-		
-	while(c <= 'Z' && u < 27)
-	{
-		*(char*)(0xb8000+2*u) = c;
-		c++;
-		u++;
-	}
-	PrintLine("rafaela \tasimakopoulou");
 
+	while(c <= 'Z')
+	{
+		system.putch(c);
+		c++;
+		
+	}
+		
 }
