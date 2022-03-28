@@ -12,6 +12,46 @@
 
 IDTR idtr;
 
+int abs(int num){
+	if(num<0){
+		num = (-1)*num;
+		
+		return num;
+	}else {return num;}
+}
+
+char* itoa(int num, char* buffer){  
+	int current = 0;  
+	if(num <0){
+		current = 1;
+		num *= -1;
+		buffer[0] = '-';
+	}
+	int size = 0;
+	int sizeTest = num;
+	while(sizeTest / 10 > 0){
+		sizeTest /= 10;
+		size++;
+	}
+	int index = 0;
+	while(num / 10 > 0){
+		int remainder = num % 10;
+		num /= 10;
+		buffer[current + size - index] = remainder + '0';
+		index++;
+	}
+	int remainder = num % 10;
+	buffer[current + size - index] = remainder + '0';
+	buffer[current + size + 1] = 0;
+	return buffer;	
+}
+
+char* int2String(int num, char intStr[128]) {
+ 	return itoa(num, intStr);
+}
+
+
+
 extern "C" void main(){
  
 	idtr.Limit = 0x0FFF;
