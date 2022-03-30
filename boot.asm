@@ -1,90 +1,85 @@
-[org 0x7c00]                        
-KERNEL_LOCATION equ 0x1000
-                                    
+[org 0x7c00]
 
-mov [BOOT_DISK], dl                 
 
-                                    
-xor ax, ax                          
-mov es, ax
-mov ds, ax
-mov bp, 0x8000
-mov sp, bp
+KERNEL_LOCATION equ 0x1000	; Was 0x7e00 but I changed it because of buffer overflow problems
+				; Implementing SSP asap
+				
 
-mov bx, KERNEL_LOCATION
-mov dh, 20              
 
-mov ah, 0x02
-mov al, dh 
-mov ch, 0x00
-mov dh, 0x00
-mov cl, 0x02
-mov dl, [BOOT_DISK]
-int 0x13                
+mov [BOOT_DISK], dl		; Stores the boot disk number
 
-                                    
-mov ah, 0x0
+mov bx, OK
+call PrintString
+
+xor ax, ax			; clear bits of ax
+mov es, ax			; set es to 0
+mov ds, ax			; set ds to 0
+mov bp, 0x8000 		; stack base
+mov sp, bp			; stack pointer to stack base
+					; A:B = A*d16 + B
+mov bx, KERNEL_LOCATION	; ES:BX is the location to read from, e.g. 0x0000:0x9000 = 0x00000 + 0x9000 = 0x9000
+mov dh, 50			; read 35 sectors (blank sectors: empty_end)
+
+call readDisk
+
+
+AFTER_DISK_READ: 
+
+mov bx, NL
+call PrintString
+mov bx, NL
+call PrintString
+
+call getMemoryMap
+
+
+mov ah, 0x0			; clear screen (set text mode)
 mov al, 0x3
-int 0x10                ; text mode
+int 0x10
+
+;call GraphicsMode		; uhm, later on
+
+call switchToPM
+
+	jmp $
+
+ERROR:
+    mov bx, ERROR_MSG
+    call PrintString
+    jmp $
+
+GraphicsMode:
+	mov ah, 0		; switch to graphics mode
+	mov al, 0x13
+	int 10h
+	ret
+	
 
 
-CODE_SEG equ GDT_code - GDT_start
-DATA_SEG equ GDT_data - GDT_start
+%include "PrintString.asm"
+%include "ReadFromDisk.asm"
+%include "PrintDecimal.asm"
+%include "AvailableMemory.asm"
+%include "GDT.asm"
 
-cli                     ; disable all interrupts
-lgdt [GDT_descriptor]   ; call the GDT
-mov eax, cr0            ; change the bit of cr0 to switch
-or eax, 1               ; to protected mode, using the 
-mov cr0, eax            ; GP registers
-jmp CODE_SEG:start_protected_mode   ; jump to other segment
+%include "EnterPM.asm"
 
-jmp $
-                                    
-BOOT_DISK: db 0
+OK:
+	db 'Ok', 10, 13, 0
 
-GDT_start:
-    GDT_null:               ; empty descriptor
-        dd 0x0
-        dd 0x0
+NL:
+	db 10, 13, 0
 
-    GDT_code:
-        dw 0xffff           ; 16 bits of the limits
-        dw 0x0              ; 24 bits of the base
-        db 0x0
-        db 0b10011010       ; type flag properties
-        db 0b11001111
-        db 0x0
+ERROR_MSG:
+	db 10, 13,'Error', 10, 13, 0
 
-    GDT_data:
-        dw 0xffff
-        dw 0x0
-        db 0x0
-        db 0b10010010
-        db 0b11001111
-        db 0x0
-
-GDT_end:
-
-GDT_descriptor:
-    dw GDT_end - GDT_start - 1  ; size of the GDT
-    dd GDT_start                ; start of the GDT
-
+Extended_Memory_Size: db 0, 0
 
 [bits 32]
-start_protected_mode:       ; write to videoMemory directly
-    mov ax, DATA_SEG        ; set up segment registers and stack
-	mov ds, ax
-	mov ss, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	
-	mov ebp, 0x90000		; 32 bit stack base pointer
-	mov esp, ebp
 
-    jmp KERNEL_LOCATION     ; jump to kernel location
+BEGIN_PM:
+    mov bx, [Extended_Memory_Size] ; record memory size in bx
+	jmp KERNEL_LOCATION	; jumps to entry_kernel
 
-                                     
- 
-times 510-($-$$) db 0              
+times 510-($-$$) db 0
 dw 0xaa55

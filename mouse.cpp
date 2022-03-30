@@ -1,4 +1,5 @@
 #include "include/system.h"
+#include "CPU/irq.h"
 
 uint8_t MousePointer[] = {
     0b11111111, 0b11100000, 
@@ -22,7 +23,7 @@ uint8_t MousePointer[] = {
 void MouseWait(){
     uint64_t timeout = 100000;
     while (timeout--){
-        if ((system.inportb(0x64) & 0b10) == 0){
+        if ((system.inb(0x64) & 0b10) == 0){
             return;
         }
     }
@@ -31,7 +32,7 @@ void MouseWait(){
 void MouseWaitInput(){
     uint64_t timeout = 100000;
     while (timeout--){
-        if (system.inportb(0x64) & 0b1){
+        if (system.inb(0x64) & 0b1){
             return;
         }
     }
@@ -39,14 +40,14 @@ void MouseWaitInput(){
 
 void MouseWrite(uint8_t value){
     MouseWait();
-    system.outportb(0x64, 0xD4);
+    system.outb(0x64, 0xD4);
     MouseWait();
-    system.outportb(0x60, value);
+    system.outb(0x60, value);
 }
 
 uint8_t MouseRead(){
     MouseWaitInput();
-    return system.inportb(0x60);
+    return system.inb(0x60);
 }
 
 uint8_t MouseCycle = 0;
@@ -55,8 +56,9 @@ bool MousePacketReady = false;
 Point MousePosition;
 Point MousePositionOld;
 
-void HandlePS2Mouse(uint8_t data){
+void HandlePS2Mouse(struct regs *r){
 
+    uint8_t data = system.inb(0x60);
     ProcessMousePacket();
     static bool skip = true;
     if (skip) { skip = false; return; }
@@ -155,21 +157,31 @@ void ProcessMousePacket(){
 
 void InitPS2Mouse(){
  
-    system.outportb(0x64, 0xA8); //enabling the auxiliary device - mouse
+    system.outb(0x64, 0xA8); //enabling the auxiliary device - mouse
 
     MouseWait();
-    system.outportb(0x64, 0x20); //tells the keyboard controller that we want to send a command to the mouse
+    system.outb(0x64, 0x20); //tells the keyboard controller that we want to send a command to the mouse
     MouseWaitInput();
-    uint8_t status = system.inportb(0x60);
+    uint8_t status = system.inb(0x60);
     status |= 0b10;
     MouseWait();
-    system.outportb(0x64, 0x60);
+    system.outb(0x64, 0x60);
     MouseWait();
-    system.outportb(0x60, status); // setting the correct bit is the "compaq" status byte
+    system.outb(0x60, status); // setting the correct bit is the "compaq" status byte
 
     MouseWrite(0xF6);
     MouseRead();
 
     MouseWrite(0xF4);
     MouseRead();
+}
+
+void m_install(){
+    irq_install_handler(12, HandlePS2Mouse);
+
+    // PIC SLAVE
+    system.outb(PIC2_COMMAND, PIC_EOI);
+    system.outb(PIC1_COMMAND, PIC_EOI);
+
+    InitPS2Mouse();
 }

@@ -51,10 +51,10 @@ void System::move_csr(void)
     *  learn more, you should look up some VGA specific
     *  programming documents. A great start to graphics:
     *  http://www.brackeen.com/home/vga */
-    outportb(0x3D4, 14);
-    outportb(0x3D5, temp >> 8);
-    outportb(0x3D4, 15);
-    outportb(0x3D5, temp);
+    outb(0x3D4, 14);
+    outb(0x3D5, temp >> 8);
+    outb(0x3D4, 15);
+    outb(0x3D5, temp);
 }
 
 /* Clears the screen */
@@ -83,12 +83,15 @@ void System::cls()
 void System::putch(const char c)
 {
     unsigned short *where;
-    unsigned att = attrib << 8;
+    unsigned att = attrib << 8 ;
 
     /* Handle a backspace, by moving the cursor back one space */
     if(c == 0x08)
     {
-        if(csr_x != 0) csr_x--;
+        where = textmemptr + (csr_y * 80 + csr_x);            
+        *where = c | (((short) 0x00000011) << 8) | 0x80;	/* Character AND attributes: color */
+        csr_x--;
+       
     }
     /* Handles a tab by incrementing the cursor's x, but only
     *  to a point that will make it divisible by 8 */
@@ -130,8 +133,8 @@ void System::putch(const char c)
     }
 
     /* Scroll the screen if needed, and finally move the cursor */
-    System::scroll();
-    System::move_csr();
+    scroll();
+    move_csr();
 }
 
 /* Uses the above routine to output a string... */

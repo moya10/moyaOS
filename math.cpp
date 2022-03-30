@@ -96,7 +96,8 @@ int System::sqrt(int x, int n){
 				return y;
 			}
 		}
-	}	
+	}
+	return y;	
 }
 
 int System::division(int x, int y){

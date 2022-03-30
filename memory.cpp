@@ -31,18 +31,19 @@ size_t System::strlen(const char *str)
     return retval;
 }
 
-unsigned char System::inportb (unsigned short _port)
+uint8_t System::inb (unsigned short _port)
 {
-    unsigned char rv;
-    __asm__ __volatile__ ("inb %1, %0" : "=a" (rv) : "dN" (_port));
-    return rv;
+    uint8_t res;
+	asm volatile("inb %1, %0" : "=a"(res) : "Nd"(_port));
+	return res;
 }
 
-void System::outportb (unsigned short _port, unsigned char _data)
+void System::outb (unsigned short _port, unsigned char _data)
 {
-    __asm__ __volatile__ ("outb %1, %0" : : "dN" (_port), "a" (_data));
+    asm volatile("outb %0, %1" : : "a"(_data), "Nd"(_port));
+	return;
 }
 
 void System::io_wait(){
-    asm volatile ("outb %%al, $0x80" : : "a"(0));
+    asm volatile("outb %%al, $0x80" : : "a"(0));
 }

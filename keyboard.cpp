@@ -1,11 +1,12 @@
 #include "include/system.h"
 #include "kbScancodeTranslator.cpp"
+#include "CPU/irq.h"
 
 bool isLeftShiftPressed;
 bool isRightShiftPressed;
 
-void System::HandleKeyboard(uint8_t scancode){
-
+void HandleKeyboard(struct regs *r){
+    uint8_t scancode = system.inb(0x60);
     switch (scancode){
         case LeftShift:
             isLeftShiftPressed = true;
@@ -20,20 +21,27 @@ void System::HandleKeyboard(uint8_t scancode){
             isRightShiftPressed = false;
             return;
         case Enter:
-            putch(65);
+            system.putch('\n');
             return;
         case Spacebar:
-            putch(' ');
+            system.putch(' ');
             return;
         case BackSpace:
-            puts("error");
+            system.putch(0x08);
            return;
     }
 
     char ascii = QWERTYKeyboard::Translate(scancode, isLeftShiftPressed | isRightShiftPressed);
 
     if (ascii != 0){
-        putch(ascii);
+        system.putch(ascii);
     }
 
+}
+
+void kb_install(){
+    irq_install_handler(1, HandleKeyboard);
+
+    // PIC MASTER
+    system.outb(PIC1_COMMAND, PIC_EOI);
 }

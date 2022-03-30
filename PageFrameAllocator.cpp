@@ -3,7 +3,7 @@
 
 uint64_t freeMemory;
 uint64_t usedMemory;
-uint64_t pageBitmapIndex = 0;
+
 void System::LockPage(void* address){
     uint64_t index = (uint64_t)address / 4096;
     if (system[index] == true) return;
@@ -13,7 +13,7 @@ void System::LockPage(void* address){
     }
 }
 void* System::RequestPage(){
-    for (; pageBitmapIndex < system.Size * 8; pageBitmapIndex++){
+    for (uint64_t pageBitmapIndex = 0; pageBitmapIndex < system.Size * 8; pageBitmapIndex++){
         if (system[pageBitmapIndex] == true) continue;
         LockPage((void*)(pageBitmapIndex * 4096));
         return (void*)(pageBitmapIndex * 4096);
