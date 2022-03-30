@@ -50,6 +50,12 @@ void HandlePS2Mouse(uint8_t data);
 void ProcessMousePacket();
 extern Point MousePosition;
 void m_install();
+uint16_t get_cursor_position(void);
+void DrawOverlayMouseCursor(uint8_t* mouseCursor, Point position, uint32_t colour);
+void ClearMouseCursor(uint8_t* mouseCursor, Point position);
+uint32_t GetPix(uint32_t x, uint32_t y);
+void PutPix(uint32_t x, uint32_t y, uint32_t colour);
+void PutChar(char chr, unsigned int xOff, unsigned int yOff);
 
 class System {
     public:
