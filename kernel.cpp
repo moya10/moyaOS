@@ -10,6 +10,8 @@
 #include "CPU/timer.h"
 #include "keyboard.cpp"
 #include "mouse.cpp"
+#include "acpi.cpp"
+#include "pci.cpp"
 
 extern "C" void main(){
     System system;
@@ -27,17 +29,20 @@ extern "C" void main(){
     kb_install();
     m_install();
     
+	/* Get Connected Devices */
+	ACPI::SDTHeader* xsdt = (ACPI::SDTHeader*)(0x40E); // 2 byte real mode segment pointer located within the first 1 KB of the EBDA (Extended BIOS Data Area)
+    ACPI::MCFGHeader* mcfg = (ACPI::MCFGHeader*)ACPI::FindTable(xsdt, (char*)"MCFG");
+    PCI::EnumeratePCI(mcfg);
 
-
-
-	/* Interrupts */
+	/* Test Interrupts */
 
 	// int i = 0;
-	// i = 10 / i;
+	// i = 10 / i;       //// Division by zero
 	// system.putch(i);
 
-	// asm("int $0x0e");
-    
+	// asm("int $0x0e"); //// Page fault
+
+
 	/* alphabet */
 
 	char c = 'A';

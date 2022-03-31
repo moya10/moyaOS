@@ -56,13 +56,13 @@ GraphicsMode:
 	
 
 
-%include "PrintString.asm"
-%include "ReadFromDisk.asm"
-%include "PrintDecimal.asm"
-%include "AvailableMemory.asm"
-%include "GDT.asm"
+%include "Bootloader/PrintString.asm"
+%include "Bootloader/ReadFromDisk.asm"
+%include "Bootloader/PrintDecimal.asm"
+%include "Bootloader/AvailableMemory.asm"
+%include "Bootloader/GDT.asm"
 
-%include "EnterPM.asm"
+%include "Bootloader/EnterPM.asm"
 
 OK:
 	db 'Ok', 10, 13, 0

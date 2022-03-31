@@ -55,7 +55,9 @@ void DrawOverlayMouseCursor(uint8_t* mouseCursor, Point position, uint32_t colou
 void ClearMouseCursor(uint8_t* mouseCursor, Point position);
 uint32_t GetPix(uint32_t x, uint32_t y);
 void PutPix(uint32_t x, uint32_t y, uint32_t colour);
-void PutChar(char chr, unsigned int xOff, unsigned int yOff);
+void PutChar(char chr, unsigned int xOff, unsigned int yOff,uint32_t colour);
+void move_cursor(Point position);
+
 
 class System {
     public:
@@ -73,7 +75,10 @@ class System {
     int abs(int num);
     char* itoa(int num, char* buffer);
     char* int2String(int num, char intStr[128]);
-    char* hex2string(uint64_t num, char hexStr[128]);
+    const char* to_hstring(uint64_t value);
+    const char* to_hstring(uint32_t value);
+    const char* to_hstring(uint16_t value);
+    const char* to_hstring(uint8_t value);
     char* peek(char a);
     int mult(int x, int y);
     int sqrt(int x, int n);
@@ -84,7 +89,7 @@ class System {
     unsigned short *memsetw(unsigned short *dest, unsigned short val, size_t count);
     size_t strlen(const char *str);
     uint8_t inb (unsigned short _port);
-    void outb (unsigned short _port, unsigned char _data);
+    void outb (uint16_t _port, uint8_t _data);
     void io_wait();
     void scroll(void);
     void move_csr(void);

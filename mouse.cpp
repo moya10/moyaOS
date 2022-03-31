@@ -95,25 +95,42 @@ void HandlePS2Mouse(struct regs *r){
             break;
     }
 }
+void move_cursor(Point position)
+{
+    unsigned temp;
+
+    /* The equation for finding the index in a linear
+    *  chunk of memory can be represented by:
+    *  Index = [(y * width) + x] */
+    temp = position.Y * 80 + position.X;
+
+    /* This sends a command to indicies 14 and 15 in the
+    *  CRT Control Register of the VGA controller. These
+    *  are the high and low bytes of the index that show
+    *  where the hardware cursor is to be 'blinking'. To
+    *  learn more, you should look up some VGA specific
+    *  programming documents. A great start to graphics:
+    *  http://www.brackeen.com/home/vga */
+    system.outb(0x3D4, 14);
+    system.outb(0x3D5, temp >> 8);
+    system.outb(0x3D4, 15);
+    system.outb(0x3D5, temp);
+}
 
 void PutPix(uint32_t x, uint32_t y, uint32_t colour){
-    *(uint32_t*)((x) + (y * 80)) = colour;
+    *(uint32_t*)( (x) + (y * 80)) = (((0x01 << 4) | (colour & 0x0F)) << 8);
 }
 
 uint32_t GetPix(uint32_t x, uint32_t y){
     return *(uint32_t*)((x) + (y * 80));
 }
 
-void PutChar(char chr, unsigned int xOff, unsigned int yOff)
+void PutChar(char chr, unsigned int xOff, unsigned int yOff, uint32_t colour)
 {
     unsigned short *where;
     
-    // int* pixPtr = (int*)0xb8000;
-
-    // *(unsigned int*)(pixPtr + xOff + (yOff * 80)) = 0x0A;
     where = (unsigned short *)0xB8000 + (yOff * 80 + xOff);            
-    *where = chr | (0x0F << 8);	/* Character AND attributes: color */
-    //xOff++;
+    *where = chr | (((0x01 << 4) | (colour & 0x0F)) << 8);	/* Character AND attributes: color */
 
 }
 
@@ -161,10 +178,12 @@ void DrawOverlayMouseCursor(uint8_t* mouseCursor, Point position, uint32_t colou
         for (int x = 0; x < xMax; x++){
             int bit = y * 16 + x;
             int byte = bit / 8;
+            
             if ((mouseCursor[byte] & (0b10000000 >> (x % 8))))
             {
                 MouseCursorBuffer[x + y * 16] = GetPix(position.X + x, position.Y + y);
                 PutPix(position.X + x, position.Y + y, colour);
+                
                 MouseCursorBufferAfter[x + y * 16] = GetPix(position.X + x, position.Y + y);
 
             }
@@ -232,16 +251,17 @@ void ProcessMousePacket(){
         if (MousePosition.Y > 120) MousePosition.Y = get_cursor_position() / VGA_WIDTH; 
         
         ClearMouseCursor(MousePointer, MousePositionOld);
-        DrawOverlayMouseCursor(MousePointer, MousePosition, 0x00000000);
+        DrawOverlayMouseCursor(MousePointer, MousePosition, 0x0C);
+        move_cursor(MousePosition);
 
         if (MousePacket[0] & PS2Leftbutton){
-            PutChar('@', MousePosition.X, MousePosition.Y);
+            PutChar('@', MousePosition.X, MousePosition.Y,0x0B);
         }
         if (MousePacket[0] & PS2Middlebutton){
-            PutChar('O', MousePosition.X, MousePosition.Y);
+            PutChar('O', MousePosition.X, MousePosition.Y,0x0C);
         }
         if (MousePacket[0] & PS2Rightbutton){
-            PutChar('$', MousePosition.X, MousePosition.Y);
+            PutChar('$', MousePosition.X, MousePosition.Y,0x0D);
         }
 
         MousePacketReady = false;
