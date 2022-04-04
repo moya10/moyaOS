@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include "include/system.h"
 
-
 int System::abs(int num){
 	if(num<0){
 		num = (-1)*num;
@@ -158,4 +157,58 @@ int System::division(int x, int y){
 	int q = division(x, 2*y);
 	if((x-2*q*y) < y) return 2*q;
 	else return 2*q + 1;
+}
+
+
+int System::strlen(const char* str)
+{
+    int retval;
+    for(retval = 0; str[retval] != 0; retval++);
+    return retval;
+}
+bool System::StringStartsWith(const char* s, const char* t)
+{
+    const char* g = t;
+	
+	bool res = true;
+	int i = 0;
+	do{
+		if(s[i] != t[i] || i > 80){
+			res = false;
+			break;
+		}
+		else i++;
+	}while(g[i] != 0);
+	return res; 
+}
+
+bool System::StringsEqu(const char* s, const char* t)
+{
+	const char* g = strlen(s) > strlen(t)? s : t;
+	
+	bool res = true;
+	int i = 0;
+	do{
+		if(s[i] != t[i] || i > 80){
+			res = false;
+			break;
+		}
+		else i++;
+	}while(g[i] != 0);
+	return res;
+}
+char* System::removeChar(char *str, char *garbage) 
+{
+	int i = strlen(str);
+	int k = strlen(garbage);
+    char *dst;
+	int g= 0; int l=0;
+    for (g; g <= i; g++) {
+        if(g<k){
+			
+		}else{
+			dst[l++] = str[g];
+		}
+    }
+    return dst;
 }

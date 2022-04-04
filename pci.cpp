@@ -15,15 +15,15 @@ namespace PCI{
         if (pciDeviceHeader->DeviceID == 0 ) return;
         if (pciDeviceHeader->DeviceID == 0xFFFF ) return;
 
-        system.puts(GetVendorName(pciDeviceHeader->VendorID));
-        system.puts(" 1/ ");
-        system.puts(GetDeviceName(pciDeviceHeader->VendorID, pciDeviceHeader->DeviceID));
-        system.puts(" 2/ ");
-        system.puts(DeviceClasses[pciDeviceHeader->Class]);
-        system.puts(" 3/ ");
-        system.puts(GetSubclassName(pciDeviceHeader->Class, pciDeviceHeader->Subclass));
-        system.puts(" 4/ ");
-        system.puts(GetProgIFName(pciDeviceHeader->Class, pciDeviceHeader->Subclass, pciDeviceHeader->ProgIF));
+        kprint(GetVendorName(pciDeviceHeader->VendorID));
+        kprint(" 1/ ");
+        kprint(GetDeviceName(pciDeviceHeader->VendorID, pciDeviceHeader->DeviceID));
+        kprint(" 2/ ");
+        kprint(DeviceClasses[pciDeviceHeader->Class]);
+        kprint(" 3/ ");
+        kprint(GetSubclassName(pciDeviceHeader->Class, pciDeviceHeader->Subclass));
+        kprint(" 4/ ");
+        kprint(GetProgIFName(pciDeviceHeader->Class, pciDeviceHeader->Subclass, pciDeviceHeader->ProgIF));
        
 
     }
@@ -67,7 +67,7 @@ namespace PCI{
 
         int entries = ((mcfg->Header.Length) - sizeof(ACPI::MCFGHeader)) / sizeof(ACPI::DeviceConfig);
         // char intStr[128];
-        // system.puts(system.int2String(entries,intStr));
+        // kprint(system.int2String(entries,intStr));
         for (int t = 0; t < entries; t++){
             ACPI::DeviceConfig* newDeviceConfig = (ACPI::DeviceConfig*)((uint64_t)mcfg + sizeof(ACPI::MCFGHeader) + (sizeof(ACPI::DeviceConfig) * t));
             //if(newDeviceConfig->BaseAddress != NULL){

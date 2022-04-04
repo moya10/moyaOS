@@ -24,12 +24,6 @@ unsigned short *System::memsetw(unsigned short *dest, unsigned short val, size_t
     return dest;
 }
 
-size_t System::strlen(const char *str)
-{
-    size_t retval;
-    for(retval = 0; *str != '\0'; str++) retval++;
-    return retval;
-}
 
 uint8_t System::inb (unsigned short _port)
 {

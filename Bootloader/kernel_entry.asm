@@ -11,3 +11,7 @@ call main		        ; calls kernel function main()
 jmp $
 
 %include "CPU/interrupt.asm"
+
+;section .rodata		    ; read only data
+
+%include "Bootloader/IncBins.asm"	; including binaries

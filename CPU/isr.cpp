@@ -121,8 +121,8 @@ extern "C" void _fault_handler(struct regs *r)
     
     if (r->int_no < 32)
     {
-        system.puts(exception_messages[r->int_no]);
-        system.puts(" Exception. System Halted!\n\r");
+        kprint(exception_messages[r->int_no]);
+        kprint(" Exception. System Halted!\n\r");
         for (;;);
     }
 }

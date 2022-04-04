@@ -1,7 +1,7 @@
 #include "include/system.h"
 #include "CPU/irq.h"
 
-#define VGA_WIDTH	120
+#define VGA_WIDTH 80
 
 uint8_t MousePointer[] = {
     0b11111111, 0b11100000, 
@@ -99,99 +99,89 @@ void move_cursor(Point position)
 {
     unsigned temp;
 
-    /* The equation for finding the index in a linear
-    *  chunk of memory can be represented by:
-    *  Index = [(y * width) + x] */
     temp = position.Y * 80 + position.X;
 
-    /* This sends a command to indicies 14 and 15 in the
-    *  CRT Control Register of the VGA controller. These
-    *  are the high and low bytes of the index that show
-    *  where the hardware cursor is to be 'blinking'. To
-    *  learn more, you should look up some VGA specific
-    *  programming documents. A great start to graphics:
-    *  http://www.brackeen.com/home/vga */
     system.outb(0x3D4, 14);
     system.outb(0x3D5, temp >> 8);
     system.outb(0x3D4, 15);
     system.outb(0x3D5, temp);
 }
 
-void PutPix(uint32_t x, uint32_t y, uint32_t colour){
-    *(uint32_t*)( (x) + (y * 80)) = (((0x01 << 4) | (colour & 0x0F)) << 8);
-}
+// void PutPix(uint32_t x, uint32_t y, uint32_t colour){
+//     *(uint32_t*)( (x) + (y * 80)) = (((0x01 << 4) | (colour & 0x0F)) << 8);
+// }
 
-uint32_t GetPix(uint32_t x, uint32_t y){
-    return *(uint32_t*)((x) + (y * 80));
-}
+// uint32_t GetPix(uint32_t x, uint32_t y){
+//     return *(uint32_t*)((x) + (y * 80));
+// }
 
 void PutChar(char chr, unsigned int xOff, unsigned int yOff, uint32_t colour)
 {
     unsigned short *where;
     
     where = (unsigned short *)0xB8000 + (yOff * 80 + xOff);            
-    *where = chr | (((0x01 << 4) | (colour & 0x0F)) << 8);	/* Character AND attributes: color */
+    *where = chr | (((BAR_COLOR << 4) | (colour & 0x0F)) << 8);	/* Character AND attributes: color */
 
 }
 
-uint32_t MouseCursorBuffer[16 * 16];
-uint32_t MouseCursorBufferAfter[16 * 16];
-bool MouseDrawn;
+// uint32_t MouseCursorBuffer[16 * 16];
+// uint32_t MouseCursorBufferAfter[16 * 16];
+// bool MouseDrawn;
 
-void ClearMouseCursor(uint8_t* mouseCursor, Point position){
-    if (!MouseDrawn) return;
+// void ClearMouseCursor(uint8_t* mouseCursor, Point position){
+//     if (!MouseDrawn) return;
 
-    int xMax = 16;
-    int yMax = 16;
-    int differenceX = get_cursor_position() % VGA_WIDTH - position.X;
-    int differenceY = get_cursor_position() / VGA_WIDTH - position.Y;
+//     int xMax = 16;
+//     int yMax = 16;
+//     int differenceX = get_cursor_position() % VGA_WIDTH - position.X;
+//     int differenceY = get_cursor_position() / VGA_WIDTH - position.Y;
 
-    if (differenceX < 16) xMax = differenceX;
-    if (differenceY < 16) yMax = differenceY;
+//     if (differenceX < 16) xMax = differenceX;
+//     if (differenceY < 16) yMax = differenceY;
 
-    for (int y = 0; y < yMax; y++){
-        for (int x = 0; x < xMax; x++){
-            int bit = y * 16 + x;
-            int byte = bit / 8;
-            if ((mouseCursor[byte] & (0b10000000 >> (x % 8))))
-            {
-                if (GetPix(position.X + x, position.Y + y) == MouseCursorBufferAfter[x + y *16]){
-                    PutPix(position.X + x, position.Y + y, MouseCursorBuffer[x + y * 16]);
-                }
-            }
-        }
-    }
-}
+//     for (int y = 0; y < yMax; y++){
+//         for (int x = 0; x < xMax; x++){
+//             int bit = y * 16 + x;
+//             int byte = bit / 8;
+//             if ((mouseCursor[byte] & (0b10000000 >> (x % 8))))
+//             {
+//                 if (GetPix(position.X + x, position.Y + y) == MouseCursorBufferAfter[x + y *16]){
+//                     PutPix(position.X + x, position.Y + y, MouseCursorBuffer[x + y * 16]);
+//                 }
+//             }
+//         }
+//     }
+// }
 
-void DrawOverlayMouseCursor(uint8_t* mouseCursor, Point position, uint32_t colour){
+// void DrawOverlayMouseCursor(uint8_t* mouseCursor, Point position, uint32_t colour){
 
 
-    int xMax = 16;
-    int yMax = 16;
-    int differenceX = get_cursor_position() % VGA_WIDTH - position.X;
-    int differenceY = get_cursor_position() / VGA_WIDTH - position.Y;
+//     int xMax = 16;
+//     int yMax = 16;
+//     int differenceX = get_cursor_position() % VGA_WIDTH - position.X;
+//     int differenceY = get_cursor_position() / VGA_WIDTH - position.Y;
 
-    if (differenceX < 16) xMax = differenceX;
-    if (differenceY < 16) yMax = differenceY;
+//     if (differenceX < 16) xMax = differenceX;
+//     if (differenceY < 16) yMax = differenceY;
 
-    for (int y = 0; y < yMax; y++){
-        for (int x = 0; x < xMax; x++){
-            int bit = y * 16 + x;
-            int byte = bit / 8;
+//     for (int y = 0; y < yMax; y++){
+//         for (int x = 0; x < xMax; x++){
+//             int bit = y * 16 + x;
+//             int byte = bit / 8;
             
-            if ((mouseCursor[byte] & (0b10000000 >> (x % 8))))
-            {
-                MouseCursorBuffer[x + y * 16] = GetPix(position.X + x, position.Y + y);
-                PutPix(position.X + x, position.Y + y, colour);
+//             if ((mouseCursor[byte] & (0b10000000 >> (x % 8))))
+//             {
+//                 MouseCursorBuffer[x + y * 16] = GetPix(position.X + x, position.Y + y);
+//                 PutPix(position.X + x, position.Y + y, colour);
                 
-                MouseCursorBufferAfter[x + y * 16] = GetPix(position.X + x, position.Y + y);
+//                 MouseCursorBufferAfter[x + y * 16] = GetPix(position.X + x, position.Y + y);
 
-            }
-        }
-    }
+//             }
+//         }
+//     }
 
-    MouseDrawn = true;
-}
+//     MouseDrawn = true;
+// }
 
 
 
@@ -250,12 +240,13 @@ void ProcessMousePacket(){
         if (MousePosition.Y < 0) MousePosition.Y = 0;
         if (MousePosition.Y > 120) MousePosition.Y = get_cursor_position() / VGA_WIDTH; 
         
-        ClearMouseCursor(MousePointer, MousePositionOld);
-        DrawOverlayMouseCursor(MousePointer, MousePosition, 0x0C);
+        // ClearMouseCursor(MousePointer, MousePositionOld);
+        // DrawOverlayMouseCursor(MousePointer, MousePosition, 0x0C);
         move_cursor(MousePosition);
 
         if (MousePacket[0] & PS2Leftbutton){
             PutChar('@', MousePosition.X, MousePosition.Y,0x0B);
+            //kprintCol("@",0x0B);
         }
         if (MousePacket[0] & PS2Middlebutton){
             PutChar('O', MousePosition.X, MousePosition.Y,0x0C);
