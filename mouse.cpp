@@ -108,11 +108,11 @@ void move_cursor(Point position)
 }
 
 // void PutPix(uint32_t x, uint32_t y, uint32_t colour){
-//     *(uint32_t*)( (x) + (y * 80)) = (((0x01 << 4) | (colour & 0x0F)) << 8);
+//     *(uint32_t*)((unsigned short *)0xB8000 + (x) + (y * 80)) = 'x'| (((0x01 << 4) | (colour & 0x0F)) << 8);
 // }
 
 // uint32_t GetPix(uint32_t x, uint32_t y){
-//     return *(uint32_t*)((x) + (y * 80));
+//     return *(uint32_t*)((unsigned short *)0xB8000 +(x) + (y * 80));
 // }
 
 void PutChar(char chr, unsigned int xOff, unsigned int yOff, uint32_t colour)
@@ -242,6 +242,7 @@ void ProcessMousePacket(){
         
         // ClearMouseCursor(MousePointer, MousePositionOld);
         // DrawOverlayMouseCursor(MousePointer, MousePosition, 0x0C);
+        
         move_cursor(MousePosition);
 
         if (MousePacket[0] & PS2Leftbutton){

@@ -389,6 +389,7 @@ void load_shell(){
 	ClearScreen(DEFAULT_COLOR);
 	ColLine(0, BAR_COLOR);
 	ColLine(24, BAR_COLOR);
+	ClrLine(0);
 	ClrLine(24);
 	SetCursorPos(0,0);
 	kprint("moyaOS shell - ");
@@ -400,8 +401,6 @@ void load_shell(){
 	SetCursorPosRaw(1920);
 	return;
 }
-
-
 
 
 char CommandBuffer[128];
@@ -441,7 +440,8 @@ void parseCommand()
     }
     kprint("\n");
     CommandCursor = CursorPos;
-    ClrLine(24);
+	ClrLine(24);
+    ClrLine(0);
 	SetCursorPos(0,0);
 	kprint("moyaOS shell - ");
     kprint("task ");

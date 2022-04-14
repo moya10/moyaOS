@@ -22,17 +22,14 @@ void HandleKeyboard(struct regs *r){
             shift_pressed = false; 
             return;
         case Enter: 
-            if(system.LOAD_SHELL){
-                parseCommand();
-            }else{
-                kprintChar(10,0);
-            }
+            if(system.LOAD_SHELL) parseCommand();
+            else kprintChar(10,0);
     		return;
         case F5: 
-            load_shell(); 
+            if(system.LOAD_SHELL) load_shell(); 
             return;
         case F1:
-            // m_install();
+            if(system.LOAD_SHELL) m_install();
             return;
         case Spacebar:
             kprintChar(' ', 0);
