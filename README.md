@@ -1,45 +1,9 @@
 # moyaOS
 
-## SH preview
+## theory provided
 
-![moyaSHELL](https://github.com/moya10/moyaOS/blob/master/moyaSH.gif)
+Check the repository [here](https://github.com/moya10/os-fundamentals/) to better understand the code concepts and create smthing of your own.
 
-------
-
-## TODO
-
-### System
-- [x] GDT
-- [x] IDT
-- [x] PCI
-
-### Memory
-- [x] PMM
-- [x] VMM
-- [x] Heap
-
-### ACPI
-- [x] ACPI
-- [ ] Shutdown
-- [ ] Reboot
-
-### Device drivers
-#### Audio
-- [ ] PC speaker
-
-#### I/O
-- [x] PS/2 Keyboard
-- [x] PS/2 Mouse
-
-#### USB
-- [ ] UHCI
-- [ ] OHCI
-- [ ] EHCI
-- [ ] XHCI
-
-### Timers
-- [x] PIT
------
 ## Building And Running
 
 ### Required packages
