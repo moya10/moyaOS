@@ -2,7 +2,7 @@
 
 ## theory provided
 
-Check the repository [here](https://github.com/moya10/os-fundamentals/) to better understand the code concepts and create smthing of your own.
+Check the repository [here](https://github.com/moya10/os-fundamentals/) to better understand the code concepts and create smthing of your own. You will find some theory related to os development as well as a few excersices to practise.
 
 ## Building And Running
 
